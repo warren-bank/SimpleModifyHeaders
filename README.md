@@ -1,7 +1,5 @@
 # [Simple Modify Headers - Extended](https://github.com/warren-bank/crx-simple-modify-headers/tree/extended)
 
-- - - -
-
 ## Forked from
 
 [SimpleModifyHeaders](https://github.com/didierfred/SimpleModifyHeaders)

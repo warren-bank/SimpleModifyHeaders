@@ -8,62 +8,49 @@
 let line_number;
 let started;
 let show_comments;
-let use_url_contains;
 let input_field_style;
 
-
 window.onload = function() {
-   initConfigurationPage();
- }
-
-function initConfigurationPage() {
-	initGlobalValue();
-	// load configuration from local storage
-        loadFromBrowserStorage(['config'],function (result) {
-	  config = JSON.parse(result.config);
-	  if (config.debug_mode) document.getElementById("debug_mode").checked = true;
-
-	  if (typeof config.show_comments === 'undefined') document.getElementById("show_comments").checked = true;
-	  else if (config.show_comments) document.getElementById("show_comments").checked = true;
-	  else show_comments=false;
-
-	  if (config.use_url_contains) {
-            document.getElementById("use_url_contains").checked = true;
-            use_url_contains=true;
-          }
-
-	  for (let to_add of config.headers) appendLine(to_add.url_contains,to_add.action,to_add.header_name,to_add.header_value,to_add.comment,to_add.apply_on,to_add.status);
-	  document.getElementById('save_button').addEventListener('click',function (e) {saveData();});
-	  document.getElementById('export_button').addEventListener('click',function (e) {exportData();});
-	  document.getElementById('import_button').addEventListener('click',function (e) {importData(e);});
-	  document.getElementById('parameters_button').addEventListener('click',function (e) {showParametersScreen();});
-	  document.getElementById('add_button').addEventListener('click',function (e) {appendLine("","add","-","-","","req","on");});
-	  document.getElementById('start_img').addEventListener('click',function (e) {startModify();});
-	  document.getElementById('targetPage').value=config.target_page;
-	  checkTargetPageField();
-	  document.getElementById('targetPage').addEventListener('keyup',function (e) {checkTargetPageField();});
-	  document.getElementById('exit_parameters_screen_button').addEventListener('click',function (e) {hideParametersScreen();});
-
-          loadFromBrowserStorage(['started'], function (result) {
-	    started = result.started;
-	    if (started==="on") document.getElementById("start_img").src = "img/stop.png";
-          });
-
-	  document.getElementById('show_comments').addEventListener('click',function (e) {showCommentsClick();});
-	  document.getElementById('use_url_contains').addEventListener('click',function (e) {useUrlContainsClick();});
-	  reshapeTable();
-        });
+  initConfigurationPage();
 }
 
-function initGlobalValue()
- {
+function initConfigurationPage() {
+  initGlobalValue();
+
+  // load configuration from local storage
+  loadFromBrowserStorage(['config'], function (result) {
+    config = JSON.parse(result.config);
+    if (config.debug_mode) document.getElementById("debug_mode").checked = true;
+
+    if (typeof config.show_comments === 'undefined') document.getElementById("show_comments").checked = true;
+    else if (config.show_comments) document.getElementById("show_comments").checked = true;
+    else show_comments=false;
+
+    for (let to_add of config.headers) appendLine(to_add.url_contains,to_add.action,to_add.header_name,to_add.header_value,to_add.comment,to_add.apply_on,to_add.status);
+    document.getElementById('save_button').addEventListener('click',function (e) {saveData();});
+    document.getElementById('export_button').addEventListener('click',function (e) {exportData();});
+    document.getElementById('import_button').addEventListener('click',function (e) {importData(e);});
+    document.getElementById('parameters_button').addEventListener('click',function (e) {showParametersScreen();});
+    document.getElementById('add_button').addEventListener('click',function (e) {appendLine("","add","-","-","","req","on");});
+    document.getElementById('start_img').addEventListener('click',function (e) {startModify();});
+    document.getElementById('exit_parameters_screen_button').addEventListener('click',function (e) {hideParametersScreen();});
+
+    loadFromBrowserStorage(['started'], function (result) {
+      started = result.started;
+      if (started==="on") document.getElementById("start_img").src = "img/stop.png";
+    });
+
+    document.getElementById('show_comments').addEventListener('click',function (e) {showCommentsClick();});
+    reshapeTable();
+  });
+}
+
+function initGlobalValue() {
   line_number = 1;
   started = "off";
   show_comments = true;
-  use_url_contains = false;
   input_field_style="form_control input_field_small";
- }
-
+}
 
 function loadFromBrowserStorage(item,callback_function) {
   chrome.storage.local.get(item, callback_function);
@@ -95,22 +82,14 @@ function showCommentsClick() {
   reshapeTable();
 }
 
-function useUrlContainsClick() {
-  if (document.getElementById('use_url_contains').checked) use_url_contains = true;
-  else use_url_contains = false;
-  reshapeTable();
-}
-
 /** END PARAMETERS SCREEN MANAGEMENT **/
-
-
 
 /**
 * Add a new configuration line on the UI
 **/
 function appendLine(url_contains,action,header_name,header_value,comment,apply_on,status) {
   let html = `
-    <td ${use_url_contains ? '' : ' hidden'}>
+    <td>
       <input class="${input_field_style}" id="url_contains${line_number}" />
     </td>
     <td>
@@ -175,7 +154,6 @@ function appendLine(url_contains,action,header_name,header_value,comment,apply_o
   line_number++;
 }
 
-
 /** ACTIVATE BUTTON MANAGEMENT **/
 
 function setButtonStatus(button,status) {
@@ -204,19 +182,13 @@ function switchActivateButton(button_number) {
 
 /** END ACTIVATE BUTTON MANAGEMENT **/
 
-
 function reshapeTable() {
   let th_elements = document.querySelectorAll("#config_table_head th");
   let tr_elements = document.querySelectorAll("#config_tab tr");
 
-  if (show_comments) {
-    if (use_url_contains) input_field_style = "form_control input_field_small";
-    else input_field_style = "form_control input_field_medium";
-  }
-  else {
-    if (use_url_contains) input_field_style = "form_control input_field_medium";
-    else input_field_style = "form_control input_field_large";
-  }
+  input_field_style = (show_comments)
+    ? "form_control input_field_small"
+    : "form_control input_field_medium";
 
   for (let i=0;i<tr_elements.length;i++) {
     tr_elements[i].children[4].children[0].className=input_field_style;
@@ -224,10 +196,8 @@ function reshapeTable() {
     tr_elements[i].children[3].children[0].className=input_field_style;
     tr_elements[i].children[2].children[0].className=input_field_style;
     tr_elements[i].children[0].children[0].className=input_field_style;
-    tr_elements[i].children[0].hidden = (!use_url_contains);
   }
   th_elements[4].hidden = (!show_comments);
-  th_elements[0].hidden = (!use_url_contains);
 }
 
 /**
@@ -240,63 +210,77 @@ function create_configuration_data() {
   let debug_mode=false;
   let show_comments=false;
   for (let i=0;i<tr_elements.length;i++) {
-    const url_contains = tr_elements[i].children[0].children[0].value;
+    const url_contains = tr_elements[i].children[0].children[0].value.trim();
+
+    if (url_contains && !isRegExpValid(url_contains)) {
+      // highlight input field containing invalid regex pattern value
+      tr_elements[i].children[0].children[0].style.color="red";
+
+      // throw
+      throw new Error(`invalid regex pattern:\n'${url_contains}'`)
+    }
+    else {
+      // remove highlight for corrected value
+      tr_elements[i].children[0].children[0].style.color="black";
+    }
+
     const action = tr_elements[i].children[1].children[0].value;
-    const header_name = tr_elements[i].children[2].children[0].value;
-    const header_value = tr_elements[i].children[3].children[0].value;
-    const comment = tr_elements[i].children[4].children[0].value;
+    const header_name = tr_elements[i].children[2].children[0].value.trim();
+    const header_value = tr_elements[i].children[3].children[0].value.trim();
+    const comment = tr_elements[i].children[4].children[0].value.trim();
     const apply_on = tr_elements[i].children[5].children[0].value;
     const status = getButtonStatus(tr_elements[i].children[6].children[0]);
     headers.push({url_contains:url_contains,action:action,header_name:header_name,header_value:header_value,comment:comment,apply_on:apply_on,status:status});
   }
   if (document.getElementById("debug_mode").checked) debug_mode=true;
   if (document.getElementById("show_comments").checked) show_comments=true;
-  if (document.getElementById("use_url_contains").checked) use_url_contains=true;
-  let to_export = {format_version:"1.2",target_page:document.getElementById('targetPage').value,headers:headers,
-				  debug_mode:debug_mode,show_comments:show_comments,use_url_contains:use_url_contains};
-  return JSON.stringify(to_export);
-}
-
-/**
-*  check if url pattern is valid , if not set the font color to red
-**/
-function checkTargetPageField() {
-  if (isTargetValid(document.getElementById('targetPage').value)) document.getElementById('targetPage').style.color="black";
-  else document.getElementById('targetPage').style.color="red";
+  let to_export = {headers, debug_mode, show_comments};
+  return JSON.stringify(to_export, null, 2);
 }
 
 /**
 * check if url patterns are valid
 **/
-function isTargetValid(target) {
-  if (target==="") return true;
-  if (target===" ") return true;
-  if (target==="*") return true;
-  let targets=target.split(";");
-  for (let i in targets) {
-    if (!targets[i].match("(http|https|[\*]):\/\/([\*][\.][^\*]*|[^\*]*|[\*])\/")) return false;
+function isRegExpValid(source) {
+  try {
+    new RegExp(source)
+    return true
   }
-  return true;
+  catch(error) {
+    return false
+  }
 }
 
 /**
 *  save the data to the local storage and restart modify header
-* show a warning if url patterns are invalid
 **/
 function saveData() {
-  if (!isTargetValid(document.getElementById('targetPage').value)) alert("Warning: Url patterns are invalid");
-  storeInBrowserStorage({config:create_configuration_data()},function() {
-    chrome.runtime.sendMessage("reload");
-  });
-  return true;
+  try {
+    const config = create_configuration_data()
+
+    storeInBrowserStorage({config},function() {
+      chrome.runtime.sendMessage("reload");
+    });
+    return true;
+  }
+  catch(error) {
+    alert(error.message);
+    return false;
+  }
 }
 
 /**
 * If url pattern is valid save the data in a file
 **/
 function exportData() {
-  // Create file data
-  let to_export= create_configuration_data();
+  let to_export
+  try {
+    to_export = create_configuration_data()
+  }
+  catch(error) {
+    alert(error.message);
+    return;
+  }
 
   // Create file to save
   let a         = document.createElement('a');
@@ -346,24 +330,11 @@ function readSingleFile(e) {
 
 /**
 * Load configuration from a string
-* If format is not recognized , try modify header add-an file format
 **/
 function loadConfiguration(configuration) {
   let config="";
   try {
     config = JSON.parse(configuration);
-    // check file format
-    if (config.format_version) {
-      if (config.format_version==="1.0") config = convertConfigurationFormat1dot0ToCurrentFormat(config);
-      else if (config.format_version==="1.1") config = convertConfigurationFormat1dot1ToCurrentFormat(config);
-    }
-    else {
-      if (config[0].action) config = convertHistoricalModifyHeaderFormatToCurrentFormat (config);
-      else {
-        alert("Invalid file format");
-	return;
-      }
-    }
   }
   catch(error) {
     console.log(error);
@@ -372,52 +343,16 @@ function loadConfiguration(configuration) {
   }
 
   // store the conf in the local storage
-  storeInBrowserStorage({config:JSON.stringify(config)},function() {
+  storeInBrowserStorage({config: JSON.stringify(config)}, function() {
    // load the new conf
    reloadConfigPage();
   });
 }
 
-function convertConfigurationFormat1dot0ToCurrentFormat(config) {
-  config.format_version="1.2";
-  for (let line of config.headers) {
-    line.apply_on="req";
-    line.url_contains="";
-  }
-  config.debug_mode=false;
-  config.show_comments=true;
-  config.use_url_contains=false;
-  return config;
- }
-
-
-function convertConfigurationFormat1dot1ToCurrentFormat(config) {
-  config.format_version="1.2";
-  for (let line of config.headers) line.url_contains="";
-    config.show_comments=true;
-    config.use_url_contains=false;
-  return config;
- }
-
-/**
-* Historical Modify header add-on file format  : array of {action,name,value,comment,enabled}
-**/
-function convertHistoricalModifyHeaderFormatToCurrentFormat(config) {
-  let headers = [];
-  for (let line_to_load of config) {
-    var enabled = "off";
-    if (line_to_load.enabled) enabled = "on";
-    if (line_to_load.action==="Filter") line_to_load.action="delete";		        
-    headers.push({url_contains:"",action:line_to_load.action.toLowerCase(),header_name:line_to_load.name,
-					header_value:line_to_load.value,comment:line_to_load.comment,apply_on:"req",status:enabled});
-  }
-  return {format_version:"1.2",target_page:"",headers:headers,debug_mode:false,show_comments:true,use_url_contains:false};
-}
-
 function reloadConfigPage() {
   chrome.runtime.sendMessage("reload");
   document.location.href="config.html";
-  }
+}
 
 /**
 * Delete a configuration line on the UI
