@@ -1,0 +1,34 @@
+{
+  "name": "Simple Modify Headers - Extended",
+  "description": "Rewrites HTTP request/response headers based on a rules table.",
+  "version": "1.6.7",
+  "manifest_version": 2,
+  "icons": {
+    "48": "icons/modify-48.png"
+  },
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "browser_action": {
+    "default_icon": "icons/modify-32.png",
+    "default_title": "Simple Modify Headers",
+    "default_popup": "popup/menu.html"
+  },
+  "permissions": [
+    "activeTab",
+    "storage",
+    "webRequest",
+    "webRequestBlocking",
+    "<all_urls>",
+    "tabs"
+  ],
+  "applications": {
+    "gecko": {
+      "id": "{f6ca2dfb-43a6-4334-9fad-8d5a71a1fe67}",
+      "strict_min_version": "42.0"
+    }
+  },
+  "homepage_url": "https://github.com/warren-bank/crx-simple-modify-headers/tree/extended"
+}
