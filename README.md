@@ -78,4 +78,4 @@ The code is Open Source under [Mozilla Public License 2.0](https://www.mozilla.o
 
 ## Screenshots
 
-![screenshot](./etc/screenshots/1.png)
+![screenshot](./etc/screenshots/animation.gif)
