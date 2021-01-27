@@ -31,7 +31,7 @@ function initConfigurationPage() {
     document.getElementById('export_button').addEventListener('click',function (e) {exportData();});
     document.getElementById('import_button').addEventListener('click',function (e) {importData(e);});
     document.getElementById('parameters_button').addEventListener('click',function (e) {showParametersScreen();});
-    document.getElementById('add_button').addEventListener('click',function (e) {appendLine("","add","-","-","","req","on");});
+    document.getElementById('add_button').addEventListener('click',function (e) {appendLine("","add","","","","req","on");});
     document.getElementById('start_img').addEventListener('click',function (e) {startModify();});
     document.getElementById('exit_parameters_screen_button').addEventListener('click',function (e) {hideParametersScreen();});
 
