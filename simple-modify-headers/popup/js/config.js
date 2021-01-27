@@ -100,6 +100,9 @@ function appendLine(url_contains,action,header_name,header_value,comment,apply_o
       </select>
     </td>
     <td>
+      <select class="form_control select_field common_header_names" id="common_header_names${line_number}">
+        <option value="-1"></option>
+      </select>
       <input class="${input_field_style}" id="header_name${line_number}" />
     </td>
     <td>
@@ -151,6 +154,8 @@ function appendLine(url_contains,action,header_name,header_value,comment,apply_o
   document.getElementById('delete_button'+line_number).addEventListener('click',function (e) {deleteLine(line_number_to_modify)});
   document.getElementById('up_button'+line_number).addEventListener('click',function (e) {invertLine(line_number_to_modify,line_number_to_modify-1)});
   document.getElementById('down_button'+line_number).addEventListener('click',function (e) {invertLine(line_number_to_modify,line_number_to_modify+1)});
+  document.getElementById('common_header_names'+line_number).addEventListener('focus',function (e) {populateCommonHeaderNames(line_number_to_modify)});
+  document.getElementById('common_header_names'+line_number).addEventListener('change',function (e) {selectFromCommonHeaderNames(line_number_to_modify)});
   line_number++;
 }
 
@@ -194,7 +199,7 @@ function reshapeTable() {
     tr_elements[i].children[4].children[0].className=input_field_style;
     tr_elements[i].children[4].hidden = (!show_comments);
     tr_elements[i].children[3].children[0].className=input_field_style;
-    tr_elements[i].children[2].children[0].className=input_field_style;
+    tr_elements[i].children[2].children[1].className=input_field_style;
     tr_elements[i].children[0].children[0].className=input_field_style;
   }
   th_elements[4].hidden = (!show_comments);
@@ -225,7 +230,7 @@ function create_configuration_data() {
     }
 
     const action = tr_elements[i].children[1].children[0].value;
-    const header_name = tr_elements[i].children[2].children[0].value.trim();
+    const header_name = tr_elements[i].children[2].children[1].value.trim();
     const header_value = tr_elements[i].children[3].children[0].value.trim();
     const comment = tr_elements[i].children[4].children[0].value.trim();
     const apply_on = tr_elements[i].children[5].children[0].value;
@@ -409,6 +414,175 @@ function invertLine(line1, line2) {
   document.getElementById("comment"+line2).value = comment1;
   setButtonStatus(document.getElementById("activate_button"+line2),select_status1);
   document.getElementById("apply_on"+line2).value = apply_on1;
+}
+
+const http_header_names = {
+  "req": [
+    "A-IM",
+    "Accept",
+    "Accept-Charset",
+    "Accept-Datetime",
+    "Accept-Encoding",
+    "Accept-Language",
+    "Access-Control-Request-Headers",
+    "Access-Control-Request-Method",
+    "Authorization",
+    "Cache-Control",
+    "Connection",
+    "Content-Encoding",
+    "Content-Length",
+    "Content-MD5",
+    "Content-Type",
+    "Cookie",
+    "DNT",
+    "Date",
+    "Expect",
+    "Forwarded",
+    "From",
+    "Front-End-Https",
+    "HTTP2-Settings",
+    "Host",
+    "If-Match",
+    "If-Modified-Since",
+    "If-None-Match",
+    "If-Range",
+    "If-Unmodified-Since",
+    "Max-Forwards",
+    "Origin",
+    "Pragma",
+    "Proxy-Authorization",
+    "Proxy-Connection",
+    "Range",
+    "Referer[sic]",
+    "Save-Data",
+    "TE",
+    "Trailer",
+    "Transfer-Encoding",
+    "Upgrade",
+    "Upgrade-Insecure-Requests",
+    "User-Agent",
+    "Via",
+    "Warning",
+    "X-ATT-DeviceId",
+    "X-Correlation-ID",
+    "X-Csrf-Token",
+    "X-Forwarded-For",
+    "X-Forwarded-Host",
+    "X-Forwarded-Proto",
+    "X-Http-Method-Override",
+    "X-Request-ID",
+    "X-Requested-With",
+    "X-UIDH",
+    "X-Wap-Profile"
+  ],
+  "res": [
+    "Accept-Patch",
+    "Accept-Ranges",
+    "Access-Control-Allow-Credentials",
+    "Access-Control-Allow-Headers",
+    "Access-Control-Allow-Methods",
+    "Access-Control-Allow-Origin",
+    "Access-Control-Expose-Headers",
+    "Access-Control-Max-Age",
+    "Age",
+    "Allow",
+    "Alt-Svc",
+    "Cache-Control",
+    "Connection",
+    "Content-Disposition",
+    "Content-Encoding",
+    "Content-Language",
+    "Content-Length",
+    "Content-Location",
+    "Content-MD5",
+    "Content-Range",
+    "Content-Security-Policy",
+    "Content-Type",
+    "Date",
+    "Delta-Base",
+    "ETag",
+    "Expires",
+    "IM",
+    "Last-Modified",
+    "Link",
+    "Location",
+    "P3P",
+    "Pragma",
+    "Proxy-Authenticate",
+    "Public-Key-Pins",
+    "Refresh",
+    "Retry-After",
+    "Server",
+    "Set-Cookie",
+    "Status",
+    "Strict-Transport-Security",
+    "Timing-Allow-Origin",
+    "Tk",
+    "Trailer",
+    "Transfer-Encoding",
+    "Upgrade",
+    "Vary",
+    "Via",
+    "WWW-Authenticate",
+    "Warning",
+    "X-Content-Duration",
+    "X-Content-Security-Policy",
+    "X-Content-Type-Options",
+    "X-Correlation-ID",
+    "X-Frame-Options",
+    "X-Powered-By",
+    "X-Request-ID",
+    "X-UA-Compatible",
+    "X-WebKit-CSP",
+    "X-XSS-Protection"
+  ]
+}
+
+/**
+* Populate select dropdown with list of common HTTP header names
+**/
+function populateCommonHeaderNames(line_number) {
+  const dropdown = document.getElementById('common_header_names'+line_number)
+  const apply_on = document.getElementById("apply_on"+line_number).value
+  const attr_key = 'data-mode'
+
+  if (!dropdown) return
+  if (dropdown.getAttribute(attr_key) === apply_on) return
+
+  // set an attribute to flag whether the options are still current
+  dropdown.setAttribute(attr_key, apply_on)
+
+  // remove stale options
+  while (dropdown.children.length > 1) {
+    dropdown.removeChild( dropdown.lastChild )
+  }
+
+  // add current options
+  const options = http_header_names[ apply_on ]
+  let option
+  for (let index=0; index < options.length; index++) {
+    option = document.createElement('option')
+    option.setAttribute('value', index)
+    option.innerText = options[index]
+    dropdown.appendChild(option)
+  }
+}
+
+/**
+* Copy common HTTP header name from list to text field
+**/
+function selectFromCommonHeaderNames(line_number) {
+  const dropdown = document.getElementById('common_header_names'+line_number)
+  const apply_on = document.getElementById("apply_on"+line_number).value
+  const hdr_name = document.getElementById('header_name'+line_number)
+
+  const options  = http_header_names[ apply_on ]
+  const index    = parseInt( dropdown.value, 10 )
+
+  if (index >= 0) {
+    hdr_name.value = options[index]
+    dropdown.value = -1
+  }
 }
 
 /**

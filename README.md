@@ -12,6 +12,7 @@
 - URL patterns are changed from ["match patterns"](https://developer.chrome.com/extensions/match_patterns) to regular expressions
 - "Filter URL per rules" _setting_ is always enabled
 - "When URL contains" _field_ can be left empty to inherit its value from the closest previous rule that does contain a regex pattern
+- "Header Field Name" _field_ can optionally be chosen from a list of common values
 
 - - - -
 

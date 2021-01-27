@@ -35,11 +35,13 @@
 .input_url {
     border: none;
     border-bottom: 1px solid #AAAAAA;
-    width:600px;
+    width: 600px;
 }
 
 .standard_table {
-	width:1130px;
+	width: 1130px;
 }
 
-
+select.common_header_names {
+  width: 1.5em;
+}
