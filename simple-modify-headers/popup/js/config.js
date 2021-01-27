@@ -8,7 +8,6 @@
 let line_number;
 let started;
 let show_comments;
-let input_field_style;
 
 window.onload = function() {
   initConfigurationPage();
@@ -49,7 +48,6 @@ function initGlobalValue() {
   line_number = 1;
   started = "off";
   show_comments = true;
-  input_field_style="form_control input_field_small";
 }
 
 function loadFromBrowserStorage(item,callback_function) {
@@ -90,47 +88,47 @@ function showCommentsClick() {
 function appendLine(url_contains,action,header_name,header_value,comment,apply_on,status) {
   let html = `
     <td>
-      <input class="${input_field_style}" id="url_contains${line_number}" />
+      <input class="form-control" id="url_contains${line_number}" />
     </td>
-    <td>
-      <select class="form_control select_field" id="select_action${line_number}"> disable="false">
+    <td width="0">
+      <select class="form-control" id="select_action${line_number}"> disable="false">
         <option value="add">Add</option>
         <option value="modify">Modify</option>
         <option value="delete">Delete</option>
       </select>
     </td>
     <td>
-      <select class="form_control select_field common_header_names" id="common_header_names${line_number}">
+      <select class="form-control common_header_names" id="common_header_names${line_number}">
         <option value="-1"></option>
       </select>
-      <input class="${input_field_style}" id="header_name${line_number}" />
+      <input class="form-control" id="header_name${line_number}" />
     </td>
     <td>
-      <input class="${input_field_style}" id="header_value${line_number}" />
+      <input class="form-control" id="header_value${line_number}" />
     </td>
     <td${show_comments ? '' : ' hidden'}>
-      <input class="${input_field_style}" id="comment${line_number}" />
+      <input class="form-control" id="comment${line_number}" />
     </td>
-    <td>
-      <select class="form_control select_field" id="apply_on${line_number}">
+    <td width="0">
+      <select class="form-control" id="apply_on${line_number}">
         <option value="req">Request</option>
         <option value="res">Response</option>
       </select>
     </td>
-    <td>
+    <td width="0">
       <button type="button" class="btn btn-primary btn-sm" title="Activate/deactivate rule" id="activate_button${line_number}">ON <span class="glyphicon glyphicon-ok"></span></button>
     </td>
-    <td>
+    <td width="0">
       <button type="button" class="btn btn-default btn-sm" title="Move line up" id="up_button${line_number}">
         <span class="glyphicon glyphicon-arrow-up"></span>
       </button>
     </td>
-    <td>
+    <td width="0">
       <button type="button" class="btn btn-default btn-sm" title="Move line down" id="down_button${line_number}">
         <span class="glyphicon glyphicon-arrow-down"></span>
       </button>
     </td>
-    <td>
+    <td width="0">
       <button type="button" class="btn btn-default btn-sm" title="Delete line" id="delete_button${line_number}">
         <span class="glyphicon glyphicon-trash"></span>
       </button>
@@ -191,16 +189,8 @@ function reshapeTable() {
   let th_elements = document.querySelectorAll("#config_table_head th");
   let tr_elements = document.querySelectorAll("#config_tab tr");
 
-  input_field_style = (show_comments)
-    ? "form_control input_field_small"
-    : "form_control input_field_medium";
-
   for (let i=0;i<tr_elements.length;i++) {
-    tr_elements[i].children[4].children[0].className=input_field_style;
     tr_elements[i].children[4].hidden = (!show_comments);
-    tr_elements[i].children[3].children[0].className=input_field_style;
-    tr_elements[i].children[2].children[1].className=input_field_style;
-    tr_elements[i].children[0].children[0].className=input_field_style;
   }
   th_elements[4].hidden = (!show_comments);
 }
