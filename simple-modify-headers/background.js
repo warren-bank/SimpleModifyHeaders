@@ -11,11 +11,15 @@
 let config
 let started = 'off'
 let debug_mode = false
-const isChrome = (navigator.userAgent.toLowerCase().indexOf("chrome") !== -1)
 
+/*
+* Initialize global state
+*
+*/
 loadFromBrowserStorage(['config', 'started'], function (result) {
-  // if old storage method
-  if (result.config === undefined) loadConfigurationFromLocalStorage()
+  if (result.config === undefined) {
+    loadDefaultConfiguration()
+  }
   else {
     started = result.started
     config = JSON.parse(result.config)
@@ -30,11 +34,12 @@ loadFromBrowserStorage(['config', 'started'], function (result) {
     started = 'off'
     storeInBrowserStorage({ started: 'off' })
   }
+
   // listen for change in configuration or start/stop
   chrome.runtime.onMessage.addListener(notify)
 })
 
-function loadConfigurationFromLocalStorage() {
+function loadDefaultConfiguration() {
   console.log("Load default config")
 
   const headers = []
@@ -44,7 +49,7 @@ function loadConfigurationFromLocalStorage() {
   headers.push({ url_contains: "",                                 action: "add", header_name: "test-header-name-4", header_value: "test-header-value-4", comment: "",                                     apply_on: "req", status: "on" })
 
   config = { headers: headers, debug_mode: false, show_comments: true }
-  storeInBrowserStorage({ started: false, config: JSON.stringify(config) })
+  storeInBrowserStorage({ started, config: JSON.stringify(config) })
   preProcessConfig()
 }
 
@@ -73,7 +78,6 @@ function storeInBrowserStorage(item, callback_function) {
 * Standard function to log messages
 *
 */
-
 function log(message) {
   console.log(new Date() + " SimpleModifyHeader : " + message)
 }
@@ -189,40 +193,36 @@ function notify(message) {
 * Add rewriteRequestHeader as a listener to onBeforeSendHeaders.
 * Add rewriteResponseHeader as a listener to onHeadersReceived.
 * Make it "blocking" so we can modify the headers.
+*
 */
 function addListener() {
-  // need to had "extraHeaders" option for chrome https://developer.chrome.com/extensions/webRequest#life_cycle_footnote
-  if (isChrome) {
-    chrome.webRequest.onBeforeSendHeaders.addListener(
-      rewriteRequestHeader,
-      { urls: ["<all_urls>"] },
-      ["blocking", "requestHeaders", "extraHeaders"]
-    )
+  let extraInfoSpec
 
-    chrome.webRequest.onHeadersReceived.addListener(
-      rewriteResponseHeader,
-      { urls: ["<all_urls>"] },
-      ["blocking", "responseHeaders", "extraHeaders"]
-    )
-  }
+  // "extraHeaders" option is needed for Chrome v72+: https://developer.chrome.com/extensions/webRequest
+  extraInfoSpec = chrome.webRequest.OnBeforeSendHeadersOptions.hasOwnProperty('EXTRA_HEADERS')
+    ? ["blocking", "requestHeaders", "extraHeaders"]
+    : ["blocking", "requestHeaders"]
 
-  else {
-    chrome.webRequest.onBeforeSendHeaders.addListener(
-      rewriteRequestHeader,
-      { urls: ["<all_urls>"] },
-      ["blocking", "requestHeaders"]
-    )
+  chrome.webRequest.onBeforeSendHeaders.addListener(
+    rewriteRequestHeader,
+    { urls: ["<all_urls>"] },
+    extraInfoSpec
+  )
 
-    chrome.webRequest.onHeadersReceived.addListener(
-      rewriteResponseHeader,
-      { urls: ["<all_urls>"] },
-      ["blocking", "responseHeaders"]
-    )
-  }
+  // "extraHeaders" option is needed for Chrome v72+: https://developer.chrome.com/extensions/webRequest
+  extraInfoSpec = chrome.webRequest.OnHeadersReceivedOptions.hasOwnProperty('EXTRA_HEADERS')
+    ? ["blocking", "responseHeaders", "extraHeaders"]
+    : ["blocking", "responseHeaders"]
+
+  chrome.webRequest.onHeadersReceived.addListener(
+    rewriteResponseHeader,
+    { urls: ["<all_urls>"] },
+    extraInfoSpec
+  )
 }
 
 /*
-* Remove the two listener
+* Remove the two listeners
 *
 */
 function removeListener() {
