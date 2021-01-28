@@ -443,7 +443,7 @@ const http_header_names = {
     "Proxy-Authorization",
     "Proxy-Connection",
     "Range",
-    "Referer[sic]",
+    "Referer",
     "Save-Data",
     "TE",
     "Trailer",
