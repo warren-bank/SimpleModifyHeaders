@@ -95,9 +95,9 @@ function rewriteHttpHeaders(headers, url, apply_on) {
     if (to_modify.url_contains) prev_url_contains = to_modify.url_contains
     if ((to_modify.status === "on") && (to_modify.apply_on === apply_on) && prev_url_contains && prev_url_contains.test(url)) {
       if (to_modify.action === "add") {
-        let new_header = { "name": to_modify.header_name, "value": to_modify.header_value }
-        headers.push(new_header)
         if (config.debug_mode) log("Add " + headersType + " header : name=" + to_modify.header_name + ",value=" + to_modify.header_value + " for url " + url)
+        const new_header = { "name": to_modify.header_name, "value": to_modify.header_value }
+        headers.push(new_header)
       }
       else if (to_modify.action === "modify") {
         for (let header of headers) {
@@ -108,13 +108,11 @@ function rewriteHttpHeaders(headers, url, apply_on) {
         }
       }
       else if (to_modify.action === "delete") {
-        let index = -1
-        for (let i=0; i < headers.length; i++) {
-          if (headers[i].name.toLowerCase() === to_modify.header_name.toLowerCase()) index = i
-        }
-        if (index !== -1) {
-          headers.splice(index, 1)
-          if (config.debug_mode) log("Delete " + headersType + " header :  name=" + to_modify.header_name.toLowerCase() + " for url " + url)
+        for (let i = (headers.length - 1); i >= 0; i--) {
+          if (headers[i].name.toLowerCase() === to_modify.header_name.toLowerCase()) {
+            if (config.debug_mode) log("Delete " + headersType + " header :  name=" + to_modify.header_name.toLowerCase() + " for url " + url)
+            headers.splice(i, 1)
+          }
         }
       }
     }
