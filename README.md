@@ -13,6 +13,7 @@
 - "Filter URL per rules" _setting_ is always enabled
 - "When URL contains" _field_ can be left empty to inherit its value from the closest previous rule that does contain a regex pattern
 - "Header Field Name" _field_ can optionally be chosen from a list of common values
+- "Header Field Name" _field_ can fuzzy match substrings in "delete" rules by ending with the "*" character
 
 - - - -
 

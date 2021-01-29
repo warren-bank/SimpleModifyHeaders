@@ -39,17 +39,17 @@
   width: calc(100% - 1.5em - 4px);
 }
 
-#parameters_screen > #parameters_fields {
+#parameters_screen #parameters_fields {
   font-size: 1.25em;
   margin: 1em 0;
 }
-#parameters_screen > #parameters_fields > div {
+#parameters_screen #parameters_fields > div {
   margin-top: 0.25em;
 }
-#parameters_screen > #parameters_fields > strong + div {
+#parameters_screen #parameters_fields > strong + div {
   margin-top: 0.5em;
 }
-#parameters_screen > #parameters_fields input[type="checkbox"] {
+#parameters_screen #parameters_fields input[type="checkbox"] {
   margin: 0 0.5em 0 0;
   height: 1em;
   width:  1em;

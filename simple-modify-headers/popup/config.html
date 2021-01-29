@@ -18,9 +18,7 @@
           <td style="text-align:right"> <img id="start_img" src="img/start.png" alt="start/stop" style="float:right;vertical-align:top" /></td>
         </tr>
       </table>
-      <br/>
 
-      <br/>
       <table class="table">
         <tr>
           <td style="text-align:right">
@@ -36,9 +34,7 @@
           </td>
         </tr>
       </table>
-      <br/>
 
-      <br/>
       <table id="table_config" class="table form-group" cellpadding="0" cellspacing="0">
         <thead>
           <tr id="config_table_head">
@@ -69,9 +65,10 @@
           </td>
         </tr>
       </table>
-      <br/>
 
       <br/>
+      <br/>
+
       <table class="table">
         <tr>
           <td style="text-align:left">
@@ -91,19 +88,30 @@
 
     <!-- PARAMETERS SCREEN -->
     <div id="parameters_screen" hidden>
-      <h2 class="title">SIMPLE MODIFY HEADERS</h2>
-      <div id="parameters_fields">
-        <strong>Parameters :</strong>
-        <div>
-          <input type="checkbox" id="debug_mode">Debug mode</input>
-        </div>
-        <div>
-          <input type="checkbox" id="show_comments">Show comments</input>
-        </div>
-      </div>
-      <button type="button" id="exit_parameters_screen_button" class="btn btn-primary btn-sm" style="width:100px">
-        <span class="glyphicon glyphicon-step-backward"></span> Back
-      </button>
+      <table class="table">
+        <tr>
+          <td><h2 class="title">SIMPLE MODIFY HEADERS</h2></td>
+        </tr>
+      </table>
+
+      <table class="table">
+        <tr>
+          <td>
+            <div id="parameters_fields">
+              <strong>Parameters :</strong>
+              <div>
+                <input type="checkbox" id="debug_mode">Debug mode</input>
+              </div>
+              <div>
+                <input type="checkbox" id="show_comments">Show comments</input>
+              </div>
+            </div>
+            <button type="button" id="exit_parameters_screen_button" class="btn btn-primary btn-sm" style="width:100px">
+              <span class="glyphicon glyphicon-step-backward"></span> Back
+            </button>
+          </td>
+        </tr>
+      </table>
     </div>
 
     <iframe id="download" title="hidden_download_frame" width="0" height="0" style="border:none;"></iframe>

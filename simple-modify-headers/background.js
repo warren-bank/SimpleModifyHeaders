@@ -40,13 +40,113 @@ loadFromBrowserStorage(['config', 'started'], function (result) {
 })
 
 function loadDefaultConfiguration() {
-  console.log("Load default config")
+  console.log('Load default config')
 
-  const headers = []
-  headers.push({ url_contains: "^https?://httpbin\\.org/.*$",      action: "add", header_name: "test-header-name-1", header_value: "test-header-value-1", comment: "test at: https://httpbin.org/headers", apply_on: "req", status: "on" })
-  headers.push({ url_contains: "",                                 action: "add", header_name: "test-header-name-2", header_value: "test-header-value-2", comment: "",                                     apply_on: "req", status: "on" })
-  headers.push({ url_contains: "^https?://postman-echo\\.com/.*$", action: "add", header_name: "test-header-name-3", header_value: "test-header-value-3", comment: "test at: http://postman-echo.com/get", apply_on: "req", status: "on" })
-  headers.push({ url_contains: "",                                 action: "add", header_name: "test-header-name-4", header_value: "test-header-value-4", comment: "",                                     apply_on: "req", status: "on" })
+  const headers = [{
+    url_contains: '^https?://httpbin\\.org/.*$',
+    action:       'add',
+    header_name:  'test-header-name-1',
+    header_value: 'test-header-value-1',
+    comment:      'test at: https://httpbin.org/headers',
+    apply_on:     'req',
+    status:       'on'
+  },{
+    url_contains: '',
+    action:       'add',
+    header_name:  'test-header-name-2',
+    header_value: 'test-header-value-2',
+    comment:      '',
+    apply_on:     'req',
+    status:       'on'
+  },{
+    url_contains: '',
+    action:       'delete',
+    header_name:  'accept*',
+    header_value: '',
+    comment:      '',
+    apply_on:     'req',
+    status:       'on'
+  },{
+    url_contains: '',
+    action:       'delete',
+    header_name:  'sec-fetch-*',
+    header_value: '',
+    comment:      '',
+    apply_on:     'req',
+    status:       'on'
+  },{
+    url_contains: '^https?://postman-echo\\.com/.*$',
+    action:       'add',
+    header_name:  'test-header-name-3',
+    header_value: 'test-header-value-3',
+    comment:      'test at: http://postman-echo.com/get',
+    apply_on:     'req',
+    status:       'on'
+  },{
+    url_contains: '',
+    action:       'add',
+    header_name:  'test-header-name-4',
+    header_value: 'test-header-value-4',
+    comment:      '',
+    apply_on:     'req',
+    status:       'on'
+  },{
+    url_contains: '',
+    action:       'modify',
+    header_name:  'accept-encoding',
+    header_value: 'identity',
+    comment:      '',
+    apply_on:     'req',
+    status:       'on'
+  },{
+    url_contains: '',
+    action:       'delete',
+    header_name:  'cookie',
+    header_value: '',
+    comment:      '',
+    apply_on:     'req',
+    status:       'on'
+  },{
+    url_contains: '^https?://headers\\.jsontest\\.com.*$',
+    action:       'delete',
+    header_name:  '*',
+    header_value: '',
+    comment:      'test at: http://headers.jsontest.com',
+    apply_on:     'req',
+    status:       'on'
+  },{
+    url_contains: '',
+    action:       'add',
+    header_name:  'test-header-name-5',
+    header_value: 'test-header-value-5',
+    comment:      '',
+    apply_on:     'req',
+    status:       'on'
+  },{
+    url_contains: '',
+    action:       'add',
+    header_name:  'test-header-name-6',
+    header_value: 'test-header-value-6',
+    comment:      '',
+    apply_on:     'req',
+    status:       'on'
+  },{
+    url_contains: '',
+    action:       'modify',
+    header_name:  'content-type',
+    header_value: 'text/plain',
+    comment:      '',
+    apply_on:     'res',
+    status:       'on'
+  },{
+    url_contains: '',
+    action:       'add',
+    header_name:  'content-disposition',
+    header_value: 'attachment; filename="headers.txt"',
+    comment:      '',
+    apply_on:     'res',
+    status:       'off'
+  }]
 
   config = { headers: headers, debug_mode: false, show_comments: true }
   storeInBrowserStorage({ started, config: JSON.stringify(config) })
@@ -79,7 +179,7 @@ function storeInBrowserStorage(item, callback_function) {
 *
 */
 function log(message) {
-  console.log(new Date() + " SimpleModifyHeader : " + message)
+  console.log(new Date() + ' SimpleModifyHeader : ' + message)
 }
 
 /*
@@ -87,37 +187,56 @@ function log(message) {
 *
 */
 function rewriteHttpHeaders(headers, url, apply_on) {
-  const headersType = (apply_on === "req") ? "request" : "response"
+  const headersType = (apply_on === 'req') ? 'request' : 'response'
 
-  if (config.debug_mode) log("Start modify " + headersType + " headers for url " + url)
+  if (config.debug_mode) log('Start modify ' + headersType + ' headers for url ' + url)
   let prev_url_contains = null
   for (let to_modify of config.headers) {
+    // sanity check
+    if (!to_modify.action || !to_modify.apply_on || !to_modify.header_name)
+      continue
+
     if (to_modify.url_contains) prev_url_contains = to_modify.url_contains
-    if ((to_modify.status === "on") && (to_modify.apply_on === apply_on) && prev_url_contains && prev_url_contains.test(url)) {
-      if (to_modify.action === "add") {
-        if (config.debug_mode) log("Add " + headersType + " header : name=" + to_modify.header_name + ",value=" + to_modify.header_value + " for url " + url)
-        const new_header = { "name": to_modify.header_name, "value": to_modify.header_value }
+
+    const header_name_lc     = to_modify.header_name.toLowerCase()
+    const header_name_lc_end = header_name_lc.slice(-1)
+    const header_name_lc_pre = header_name_lc.slice(0, -1)
+
+    if ((to_modify.status === 'on') && (to_modify.apply_on === apply_on) && prev_url_contains && prev_url_contains.test(url)) {
+      if (to_modify.action === 'add') {
+        if (config.debug_mode) log('Add ' + headersType + ' header : name=' + to_modify.header_name + ',value=' + to_modify.header_value + ' for url ' + url)
+        const new_header = { name: to_modify.header_name, value: to_modify.header_value }
         headers.push(new_header)
       }
-      else if (to_modify.action === "modify") {
+      else if (to_modify.action === 'modify') {
         for (let header of headers) {
-          if (header.name.toLowerCase() === to_modify.header_name.toLowerCase()) {
-            if (config.debug_mode) log("Modify " + headersType + " header :  name= " + to_modify.header_name + ",old value=" + header.value + ",new value=" + to_modify.header_value + " for url " + url)
+          if (header.name.toLowerCase() === header_name_lc) {
+            if (config.debug_mode) log('Modify ' + headersType + ' header :  name= ' + header.name + ',old value=' + header.value + ',new value=' + to_modify.header_value + ' for url ' + url)
             header.value = to_modify.header_value
           }
         }
       }
-      else if (to_modify.action === "delete") {
+      else if (to_modify.action === 'delete') {
         for (let i = (headers.length - 1); i >= 0; i--) {
-          if (headers[i].name.toLowerCase() === to_modify.header_name.toLowerCase()) {
-            if (config.debug_mode) log("Delete " + headersType + " header :  name=" + to_modify.header_name.toLowerCase() + " for url " + url)
-            headers.splice(i, 1)
+          if (header_name_lc_end === '*') {
+            // fuzzy match
+            if (headers[i].name.toLowerCase().indexOf(header_name_lc_pre) === 0) {
+              if (config.debug_mode) log('Delete ' + headersType + ' header :  name=' + headers[i].name + ' for url ' + url)
+              headers.splice(i, 1)
+            }
+          }
+          else {
+            // exact match
+            if (headers[i].name.toLowerCase() === header_name_lc) {
+              if (config.debug_mode) log('Delete ' + headersType + ' header :  name=' + headers[i].name + ' for url ' + url)
+              headers.splice(i, 1)
+            }
           }
         }
       }
     }
   }
-  if (config.debug_mode) log("End modify " + headersType + " headers for url " + url)
+  if (config.debug_mode) log('End modify ' + headersType + ' headers for url ' + url)
 }
 
 /*
@@ -127,7 +246,7 @@ function rewriteHttpHeaders(headers, url, apply_on) {
 function rewriteRequestHeaders(details) {
   const headers  = details.requestHeaders
   const url      = details.url
-  const apply_on = "req"
+  const apply_on = 'req'
 
   rewriteHttpHeaders(headers, url, apply_on)
 
@@ -141,7 +260,7 @@ function rewriteRequestHeaders(details) {
 function rewriteResponseHeaders(details) {
   const headers  = details.responseHeaders
   const url      = details.url
-  const apply_on = "res"
+  const apply_on = 'res'
 
   rewriteHttpHeaders(headers, url, apply_on)
 
@@ -156,24 +275,24 @@ function rewriteResponseHeaders(details) {
 *
 **/
 function notify(message) {
-  if (message === "reload") {
-    if (config.debug_mode) log("Reload configuration")
+  if (message === 'reload') {
+    if (config.debug_mode) log('Reload configuration')
     loadFromBrowserStorage(['config'], function (result) {
       config = JSON.parse(result.config)
       preProcessConfig()
     })
   }
-  else if (message === "off") {
+  else if (message === 'off') {
     removeListeners()
-    chrome.browserAction.setIcon({ path: "icons/modify-32.png" })
-    started = "off"
-    if (config.debug_mode) log("Stop modifying headers")
+    chrome.browserAction.setIcon({ path: 'icons/modify-32.png' })
+    started = 'off'
+    if (config.debug_mode) log('Stop modifying headers')
   }
-  else if (message === "on") {
+  else if (message === 'on') {
     addListeners()
-    chrome.browserAction.setIcon({ path: "icons/modify-green-32.png" })
-    started = "on"
-    if (config.debug_mode) log("Start modifying headers")
+    chrome.browserAction.setIcon({ path: 'icons/modify-green-32.png' })
+    started = 'on'
+    if (config.debug_mode) log('Start modifying headers')
   }
 }
 
@@ -188,23 +307,23 @@ function addListeners() {
 
   // "extraHeaders" option is needed for Chrome v72+: https://developer.chrome.com/extensions/webRequest
   extraInfoSpec = chrome.webRequest.OnBeforeSendHeadersOptions.hasOwnProperty('EXTRA_HEADERS')
-    ? ["blocking", "requestHeaders", "extraHeaders"]
-    : ["blocking", "requestHeaders"]
+    ? ['blocking', 'requestHeaders', 'extraHeaders']
+    : ['blocking', 'requestHeaders']
 
   chrome.webRequest.onBeforeSendHeaders.addListener(
     rewriteRequestHeaders,
-    { urls: ["<all_urls>"] },
+    { urls: ['<all_urls>'] },
     extraInfoSpec
   )
 
   // "extraHeaders" option is needed for Chrome v72+: https://developer.chrome.com/extensions/webRequest
   extraInfoSpec = chrome.webRequest.OnHeadersReceivedOptions.hasOwnProperty('EXTRA_HEADERS')
-    ? ["blocking", "responseHeaders", "extraHeaders"]
-    : ["blocking", "responseHeaders"]
+    ? ['blocking', 'responseHeaders', 'extraHeaders']
+    : ['blocking', 'responseHeaders']
 
   chrome.webRequest.onHeadersReceived.addListener(
     rewriteResponseHeaders,
-    { urls: ["<all_urls>"] },
+    { urls: ['<all_urls>'] },
     extraInfoSpec
   )
 }
