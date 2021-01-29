@@ -27,7 +27,7 @@ loadFromBrowserStorage(['config', 'started'], function (result) {
   }
 
   if (started === 'on') {
-    addListener()
+    addListeners()
     chrome.browserAction.setIcon({ path: 'icons/modify-green-32.png' })
   }
   else if (started !== 'off') {
@@ -83,81 +83,71 @@ function log(message) {
 }
 
 /*
-* Rewrite the request header (add , modify or delete)
+* Rewrite HTTP headers (add, modify, or delete)
 *
 */
-function rewriteRequestHeader(e) {
-  if (config.debug_mode) log("Start modify request headers for url " + e.url)
+function rewriteHttpHeaders(headers, url, apply_on) {
+  const headersType = (apply_on === "req") ? "request" : "response"
+
+  if (config.debug_mode) log("Start modify " + headersType + " headers for url " + url)
   let prev_url_contains = null
   for (let to_modify of config.headers) {
-    if (to_modify.url_contains) prev_url_contains = to_modify.url_contains;
-    if ((to_modify.status === "on") && (to_modify.apply_on === "req") && prev_url_contains && prev_url_contains.test(e.url)) {
+    if (to_modify.url_contains) prev_url_contains = to_modify.url_contains
+    if ((to_modify.status === "on") && (to_modify.apply_on === apply_on) && prev_url_contains && prev_url_contains.test(url)) {
       if (to_modify.action === "add") {
         let new_header = { "name": to_modify.header_name, "value": to_modify.header_value }
-        e.requestHeaders.push(new_header)
-        if (config.debug_mode) log("Add request header : name=" + to_modify.header_name + ",value=" + to_modify.header_value + " for url " + e.url)
+        headers.push(new_header)
+        if (config.debug_mode) log("Add " + headersType + " header : name=" + to_modify.header_name + ",value=" + to_modify.header_value + " for url " + url)
       }
       else if (to_modify.action === "modify") {
-        for (let header of e.requestHeaders) {
+        for (let header of headers) {
           if (header.name.toLowerCase() === to_modify.header_name.toLowerCase()) {
-            if (config.debug_mode) log("Modify request header :  name= " + to_modify.header_name + ",old value=" + header.value + ",new value=" + to_modify.header_value + " for url " + e.url)
+            if (config.debug_mode) log("Modify " + headersType + " header :  name= " + to_modify.header_name + ",old value=" + header.value + ",new value=" + to_modify.header_value + " for url " + url)
             header.value = to_modify.header_value
           }
         }
       }
       else if (to_modify.action === "delete") {
         let index = -1
-        for (let i = 0; i < e.requestHeaders.length; i++) {
-          if (e.requestHeaders[i].name.toLowerCase() === to_modify.header_name.toLowerCase()) index = i
+        for (let i=0; i < headers.length; i++) {
+          if (headers[i].name.toLowerCase() === to_modify.header_name.toLowerCase()) index = i
         }
         if (index !== -1) {
-          e.requestHeaders.splice(index, 1)
-          if (config.debug_mode) log("Delete request header :  name=" + to_modify.header_name.toLowerCase() + " for url " + e.url)
+          headers.splice(index, 1)
+          if (config.debug_mode) log("Delete " + headersType + " header :  name=" + to_modify.header_name.toLowerCase() + " for url " + url)
         }
       }
     }
   }
-  if (config.debug_mode) log("End modify request headers for url " + e.url)
-  return { requestHeaders: e.requestHeaders }
+  if (config.debug_mode) log("End modify " + headersType + " headers for url " + url)
 }
 
 /*
-* Rewrite the response header (add , modify or delete)
+* Rewrite HTTP request headers (add, modify, or delete)
 *
 */
-function rewriteResponseHeader(e) {
-  if (config.debug_mode) log("Start modify response headers for url " + e.url)
-  let prev_url_contains = null
-  for (let to_modify of config.headers) {
-    if (to_modify.url_contains) prev_url_contains = to_modify.url_contains;
-    if ((to_modify.status === "on") && (to_modify.apply_on === "res") && prev_url_contains && prev_url_contains.test(e.url)) {
-      if (to_modify.action === "add") {
-        let new_header = { "name": to_modify.header_name, "value": to_modify.header_value }
-        e.responseHeaders.push(new_header)
-        if (config.debug_mode) log("Add response header : name=" + to_modify.header_name + ",value=" + to_modify.header_value + " for url " + e.url)
-      }
-      else if (to_modify.action === "modify") {
-        for (let header of e.responseHeaders) {
-          if (header.name.toLowerCase() === to_modify.header_name.toLowerCase()) {
-            if (config.debug_mode) log("Modify response header :  name= " + to_modify.header_name + ",old value=" + header.value + ",new value=" + to_modify.header_value + " for url " + e.url)
-            header.value = to_modify.header_value
-          }
-        }
-      }
-      else if (to_modify.action === "delete") {
-        let index = -1
-        for (let i = 0; i < e.responseHeaders.length; i++) {
-          if (e.responseHeaders[i].name.toLowerCase() === to_modify.header_name.toLowerCase()) index = i
-        }
-        if (index !== -1) {
-          e.responseHeaders.splice(index, 1)
-          if (config.debug_mode) log("Delete response header :  name=" + to_modify.header_name.toLowerCase() + " for url " + e.url)
-        }
-      }
-    }
-  }
-  if (config.debug_mode) log("End modify response headers for url " + e.url)
-  return { responseHeaders: e.responseHeaders }
+function rewriteRequestHeaders(details) {
+  const headers  = details.requestHeaders
+  const url      = details.url
+  const apply_on = "req"
+
+  rewriteHttpHeaders(headers, url, apply_on)
+
+  return { requestHeaders: headers }
+}
+
+/*
+* Rewrite HTTP response headers (add, modify, or delete)
+*
+*/
+function rewriteResponseHeaders(details) {
+  const headers  = details.responseHeaders
+  const url      = details.url
+  const apply_on = "res"
+
+  rewriteHttpHeaders(headers, url, apply_on)
+
+  return { responseHeaders: headers }
 }
 
 /*
@@ -176,13 +166,13 @@ function notify(message) {
     })
   }
   else if (message === "off") {
-    removeListener()
+    removeListeners()
     chrome.browserAction.setIcon({ path: "icons/modify-32.png" })
     started = "off"
     if (config.debug_mode) log("Stop modifying headers")
   }
   else if (message === "on") {
-    addListener()
+    addListeners()
     chrome.browserAction.setIcon({ path: "icons/modify-green-32.png" })
     started = "on"
     if (config.debug_mode) log("Start modifying headers")
@@ -190,12 +180,12 @@ function notify(message) {
 }
 
 /*
-* Add rewriteRequestHeader as a listener to onBeforeSendHeaders.
-* Add rewriteResponseHeader as a listener to onHeadersReceived.
+* Add rewriteRequestHeaders  as a listener to onBeforeSendHeaders.
+* Add rewriteResponseHeaders as a listener to onHeadersReceived.
 * Make it "blocking" so we can modify the headers.
 *
 */
-function addListener() {
+function addListeners() {
   let extraInfoSpec
 
   // "extraHeaders" option is needed for Chrome v72+: https://developer.chrome.com/extensions/webRequest
@@ -204,7 +194,7 @@ function addListener() {
     : ["blocking", "requestHeaders"]
 
   chrome.webRequest.onBeforeSendHeaders.addListener(
-    rewriteRequestHeader,
+    rewriteRequestHeaders,
     { urls: ["<all_urls>"] },
     extraInfoSpec
   )
@@ -215,7 +205,7 @@ function addListener() {
     : ["blocking", "responseHeaders"]
 
   chrome.webRequest.onHeadersReceived.addListener(
-    rewriteResponseHeader,
+    rewriteResponseHeaders,
     { urls: ["<all_urls>"] },
     extraInfoSpec
   )
@@ -225,7 +215,7 @@ function addListener() {
 * Remove the two listeners
 *
 */
-function removeListener() {
-  chrome.webRequest.onBeforeSendHeaders.removeListener(rewriteRequestHeader)
-  chrome.webRequest.onHeadersReceived.removeListener(rewriteResponseHeader)
+function removeListeners() {
+  chrome.webRequest.onBeforeSendHeaders.removeListener(rewriteRequestHeaders)
+  chrome.webRequest.onHeadersReceived.removeListener(rewriteResponseHeaders)
 }
