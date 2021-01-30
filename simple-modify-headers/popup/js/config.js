@@ -327,10 +327,7 @@ function isRegExpValid(source) {
 function saveData() {
   try {
     const config = create_configuration_data()
-
-    storeInBrowserStorage({config}, function() {
-      chrome.runtime.sendMessage('reload')
-    })
+    storeConfiguration(config, false)
     return true
   }
   catch(error) {
@@ -373,17 +370,30 @@ function exportData() {
 **/
 function importData() {
   // create an input field in the iframe
-  if (window.confirm('This will erase your actual configuration, do you want to continue ?')) {
-    const input = document.createElement('input')
-    input.type  = 'file'
-    input.addEventListener('change', readSingleFile, false)
+  const input = document.createElement('input')
+  input.type  = 'file'
+  input.addEventListener('change', importDataCallback, false)
 
-    let myf
-    myf = document.getElementById('download')
-    myf = myf.contentWindow.document || myf.contentDocument
-    myf.body.appendChild(input)
-    input.click()
+  let myf
+  myf = document.getElementById('download')
+  myf = myf.contentWindow.document || myf.contentDocument
+  myf.body.appendChild(input)
+  input.click()
+}
+
+/**
+* Import configuration from a file
+*
+**/
+function importDataCallback(e) {
+  const file = e.target.files[0]
+  if (!file) return
+
+  const reader = new FileReader()
+  reader.onload = function(e) {
+    loadConfiguration(e.target.result, true)
   }
+  reader.readAsText(file)
 }
 
 /**
@@ -391,7 +401,7 @@ function importData() {
 *
 **/
 function deleteAllData() {
-  if (window.confirm('This will erase your actual configuration, do you want to continue ?')) {
+  if (window.confirm('Delete All Lines?')) {
     try {
       const headers     = []
       let debug_mode    = false
@@ -402,13 +412,8 @@ function deleteAllData() {
       if (document.getElementById('show_comments').checked)
         show_comments = true
 
-      let config
-      config = {headers, debug_mode, show_comments}
-      config = JSON.stringify(config)
-
-      storeInBrowserStorage({config}, function() {
-        reloadConfigPage()
-      })
+      const config = {headers, debug_mode, show_comments}
+      storeConfiguration(config, true)
       return true
     }
     catch(error) {
@@ -419,39 +424,41 @@ function deleteAllData() {
 }
 
 /**
-* Import configuration from a file
-*
-**/
-function readSingleFile(e) {
-  const file = e.target.files[0]
-  if (!file) return
-
-  const reader = new FileReader()
-  reader.onload = function(e) {
-    loadConfiguration(e.target.result)
-  }
-  reader.readAsText(file)
-}
-
-/**
 * Load configuration from a string
 *
 **/
-function loadConfiguration(configuration) {
-  let config = ''
+function loadConfiguration(configuration, doMerge) {
   try {
-    config = JSON.parse(configuration)
+    const config = JSON.parse(configuration)
+
+    if (doMerge)
+      mergeConfiguration(config, true)
+    else
+      storeConfiguration(configuration, true)
   }
   catch(error) {
     console.log(error)
     alert('Invalid file format')
-    return
   }
+}
 
-  // store the conf in the local storage
-  storeInBrowserStorage({config: JSON.stringify(config)}, function() {
-    // load the new conf
-    reloadConfigPage()
+function mergeConfiguration(new_config, reloadPage) {
+  loadFromBrowserStorage(['config'], function (result) {
+    const config   = JSON.parse(result.config)
+    config.headers = config.headers.concat( new_config.headers )
+    storeConfiguration(config, reloadPage)
+  })
+}
+
+function storeConfiguration(config, reloadPage) {
+  if (typeof config !== 'string')
+    config = JSON.stringify(config)
+
+  storeInBrowserStorage({config}, function() {
+    if (reloadPage)
+      reloadConfigPage()
+    else
+      chrome.runtime.sendMessage('reload')
   })
 }
 
