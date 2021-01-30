@@ -43,7 +43,11 @@ function initConfigurationPage() {
     )
     document.getElementById('import_button').addEventListener(
       'click',
-      function (e) {importData(e)}
+      function (e) {importData()}
+    )
+    document.getElementById('delete_all_button').addEventListener(
+      'click',
+      function (e) {deleteAllData()}
     )
     document.getElementById('parameters_button').addEventListener(
       'click',
@@ -324,7 +328,7 @@ function saveData() {
   try {
     const config = create_configuration_data()
 
-    storeInBrowserStorage({config},function() {
+    storeInBrowserStorage({config}, function() {
       chrome.runtime.sendMessage('reload')
     })
     return true
@@ -367,7 +371,7 @@ function exportData() {
 * Choose a file and import data from the choosen file
 *
 **/
-function importData(evt) {
+function importData() {
   // create an input field in the iframe
   if (window.confirm('This will erase your actual configuration, do you want to continue ?')) {
     const input = document.createElement('input')
@@ -379,6 +383,38 @@ function importData(evt) {
     myf = myf.contentWindow.document || myf.contentDocument
     myf.body.appendChild(input)
     input.click()
+  }
+}
+
+/**
+* Delete all HTTP header rules from config data
+*
+**/
+function deleteAllData() {
+  if (window.confirm('This will erase your actual configuration, do you want to continue ?')) {
+    try {
+      const headers     = []
+      let debug_mode    = false
+      let show_comments = false
+
+      if (document.getElementById('debug_mode').checked)
+        debug_mode = true
+      if (document.getElementById('show_comments').checked)
+        show_comments = true
+
+      let config
+      config = {headers, debug_mode, show_comments}
+      config = JSON.stringify(config)
+
+      storeInBrowserStorage({config}, function() {
+        reloadConfigPage()
+      })
+      return true
+    }
+    catch(error) {
+      alert(error.message)
+      return false
+    }
   }
 }
 
@@ -421,7 +457,11 @@ function loadConfiguration(configuration) {
 
 function reloadConfigPage() {
   chrome.runtime.sendMessage('reload')
-  document.location.href = 'config.html'
+
+  setTimeout(
+    function() {window.location.reload()},
+    100
+  )
 }
 
 /**
@@ -675,14 +715,14 @@ function selectFromCommonHeaderNames(line_number) {
 function startModify() {
   if (started === 'off') {
       saveData()
-      storeInBrowserStorage({started:'on'},function() {
+      storeInBrowserStorage({started:'on'}, function() {
         chrome.runtime.sendMessage('on')
         started = 'on'
         document.getElementById('start_img').src = 'img/stop.png'
       })
   }
   else {
-    storeInBrowserStorage({started:'off'},function() {
+    storeInBrowserStorage({started:'off'}, function() {
       chrome.runtime.sendMessage('off')
       started = 'off'
       document.getElementById('start_img').src = 'img/start.png'
