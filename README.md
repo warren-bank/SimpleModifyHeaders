@@ -7,13 +7,34 @@
 - commit: [ea11a7a](https://github.com/didierfred/SimpleModifyHeaders/tree/ea11a7a52c7e6701f151bae3665cf455b26b94f2)
 - date: 2020-08-31
 
-## Changes from original version
+## Summary of [changes](https://github.com/warren-bank/crx-simple-modify-headers/compare/smh-extended/v1.6.7..extended)
 
-- URL patterns are changed from ["match patterns"](https://developer.chrome.com/extensions/match_patterns) to regular expressions
-- "Filter URL per rules" _setting_ is always enabled
-- "When URL contains" _field_ can be left empty to inherit its value from the closest previous rule that does contain a regex pattern
+- "URL Pattern" _field_ is removed
+  * previously:
+    - held a ["match pattern"](https://developer.chrome.com/extensions/match_patterns)
+    - was used to restrict access by the extension only to matching HTTP traffic
+  * now:
+    - the rules table is applied to all HTTP traffic
+- "Filter URL per rules" _setting_ is removed
+- "When URL contains" _field_
+  * previously:
+    - was active only when the "Filter URL per rules" _setting_ was enabled
+    - held a string
+    - was used to restrict the modification performed by the associated rule to only those URLs that contain the exact substring
+  * now:
+    - is always active
+    - holds a case-insensitive [regular expression](https://perldoc.perl.org/perlre) pattern
+    - is used to restrict the modification performed by the associated rule to only those URLs that match the regex pattern
+    - can be left empty to inherit its value from the closest previous rule that does contain a regex pattern
 - "Header Field Name" _field_ can optionally be chosen from a list of common values
 - "Header Field Name" _field_ can fuzzy match substrings in "delete" rules by ending with the "*" character
+- "Delete All" _button_ removes all rules
+- "Import" _button_ reads rules from an external JSON text file
+  * previously:
+    - imported rules did __replace__ the pre-existing set of rules
+  * now:
+    - imported rules will __append__ to the pre-existing set of rules
+- "Parameters" _button_ is renamed to "Settings"
 
 - - - -
 
